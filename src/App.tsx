@@ -4,84 +4,51 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useState, useEffect, type ReactElement } from "react";
-import { supabase } from "./lib/supabaseClient";
-import type { Session } from "@supabase/supabase-js";
+import { useSession } from "./hooks/useSession";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import DashboardPage from "./pages/DashboardPage";
 import AuthCallback from "./pages/AuthCallback";
 
-//Componentes de paginas
-import LoginPage from "./pages/LoginPage";
-
-//Componentes Layout
-import MainLayout from "./layouts/MainLayout";
-import LoadingSpinner from "./components/auth/ui/LoadingSpinner";
-
 function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { session, loading } = useSession();
 
-  //Verificar sesion cargada
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (e, session) => {
-        setSession(session);
-        setIsLoading(false);
-      }
-    );
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  //Proteger rutas
-  const ProtectedRoute = ({ children }: { children: ReactElement }) => {
-    if (isLoading) {
-      return <LoadingSpinner />;
-    }
-
-    return session ? children : <Navigate to="/login" />;
-  };
-
-  //Redirigir si ya esta autenticado
-  const AuthRoute = ({ children }: { children: ReactElement }) => {
-    if (isLoading) {
-      return <LoadingSpinner />;
-    }
-
-    return !session ? children : <Navigate to="/dashboard" />;
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
+
   return (
     <Router>
       <Routes>
         <Route
-          path="/login"
+          path="/"
           element={
-            <AuthRoute>
-              <LoginPage />
-            </AuthRoute>
+            session ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
           }
         />
+
         <Route
-          path="/auth/callback"
-          element={
-            <AuthRoute>
-              <AuthCallback />
-            </AuthRoute>
-          }
+          path="/login"
+          element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
+        />
+
+        <Route
+          path="/signup"
+          element={session ? <Navigate to={"/dashboard"} /> : <SignupPage />}
         ></Route>
+
+        <Route
+          path="/dashboard"
+          element={session ? <DashboardPage /> : <Navigate to="/login" />}
+        />
+
+        <Route path="/auth/callback" element={<AuthCallback />} />
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
