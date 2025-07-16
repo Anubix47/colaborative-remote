@@ -33,23 +33,31 @@ const SignupForm = () => {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: window.location.origin + "/dashboard",
+
+          emailRedirectTo: window.location.origin + "/auth/callback",
         },
       });
 
+      console.log(data, error);
+
+      if (error?.message.includes("already registered")) {
+        setError("Este email ya está registrado");
+      }
+
       if (error) {
+        console.error("Aqui llego"); //😒😒😒
         throw error;
       }
 
-      if (data?.user) {
-        alert(
-          "¡Registro exitoso! Por favor revisa tu email para confirmar tu cuenta."
-        );
+      if (data.user?.confirmation_sent_at) {
+        alert("¡Email de confirmación enviado! Revisa tu bandeja de entrada");
         navigate("/login");
+      } else {
+        throw new Error("No se pudo enviar el email de confirmación");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.message || "Error al registrarse");
+      setError(err.message || "Error al registrarse 👉");
     } finally {
       setLoading(false);
     }
