@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import Button from "../ui/Button";
+import Input from "../ui/Input";
 import { GitHubIcon, GoogleIcon } from "../ui/Icons";
+import { HiMail, HiLockClosed } from "react-icons/hi";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -50,7 +52,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
+    <div className="max-w-md mx-auto p-6 bg-pink-50 rounded-2xl shadow">
       <h2 className="text-xl font-bold mb-6 text-center">Iniciar Sesión</h2>
 
       {error && (
@@ -60,48 +62,33 @@ const LoginForm = () => {
       )}
 
       <form onSubmit={handleEmailLogin} className="space-y-4">
-        <div>
-          <label
-            className="block mb-1 text-sm font-medium text-gray-700"
-            htmlFor="email"
-          >
-            Correo electrónico
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="tu@email.com"
-            required
-            autoComplete="Tu email"
-          />
-        </div>
-
-        <div>
-          <label
-            className="block mb-1 text-sm font-medium text-gray-700"
-            htmlFor="password"
-          >
-            Contraseña
-          </label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="••••••••"
-            required
-            autoComplete="Tu password"
-          />
-        </div>
+        <Input
+          id="email"
+          label="Correo electrónico"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@email.com"
+          required
+          autoComplete="email"
+          icon={<HiMail className="w-5 h-5 fill-gray-600" />}
+        />
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••"
+          required
+          autoComplete="password"
+          icon={<HiLockClosed className="w-5 h-5 fill-gray-600" />}
+        />
 
         <Button
           type="submit"
           loading={loading}
-          className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="w-full py-2 bg-emerald-400 text-white  hover:bg-emerald-700 "
         >
           Iniciar sesión
         </Button>
@@ -113,7 +100,7 @@ const LoginForm = () => {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center">
-            <span className="px-2 bg-white text-gray-500 text-sm">
+            <span className="px-2 bg-pink-50 text-gray-500 text-sm">
               O continúa con
             </span>
           </div>
@@ -123,7 +110,7 @@ const LoginForm = () => {
           <Button
             onClick={() => handleOAuthLogin("google")}
             loading={loading}
-            className="flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-r-md hover:bg-gray-50"
           >
             <GoogleIcon />
             Google
@@ -132,7 +119,7 @@ const LoginForm = () => {
           <Button
             onClick={() => handleOAuthLogin("github")}
             loading={loading}
-            className="flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 py-2 border border-gray-300 rounded-l-md hover:bg-gray-50"
           >
             <GitHubIcon />
             GitHub
@@ -142,7 +129,7 @@ const LoginForm = () => {
 
       <div className="mt-6 text-center text-sm text-gray-600">
         ¿No tienes cuenta?{" "}
-        <a href="/signup" className="text-blue-600 hover:underline">
+        <a href="/signup" className="text-emerald-700 hover:underline">
           Regístrate
         </a>
       </div>

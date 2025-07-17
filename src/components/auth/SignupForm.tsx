@@ -2,7 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabaseClient";
 import Button from "../ui/Button";
+import Input from "../ui/Input";
 import { GoogleIcon, GitHubIcon } from "../ui/Icons";
+import { HiMail, HiLockClosed, HiUser } from "react-icons/hi";
 
 const SignupForm = () => {
   const [email, setEmail] = useState("");
@@ -45,7 +47,6 @@ const SignupForm = () => {
       }
 
       if (error) {
-        console.error("Aqui llego"); //😒😒😒
         throw error;
       }
 
@@ -57,14 +58,14 @@ const SignupForm = () => {
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err.message || "Error al registrarse 👉");
+      setError(err.message || "Error al registrarse ");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow">
+    <div className="max-w-md mx-auto p-6 bg-pink-50 rounded-lg shadow">
       <h2 className="text-xl font-bold mb-6 text-center">Crear Cuenta</h2>
 
       {error && (
@@ -74,73 +75,66 @@ const SignupForm = () => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Nombre Completo
-          </label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="Tu nombre completo"
-            required
-          />
-        </div>
+        <Input
+          id="fullname"
+          label="Full name"
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Tu nombre completo"
+          required
+          autoComplete="Tu nombre completo"
+          autoCapitalize="words"
+          icon={<HiUser className="w-5 h-5 fill-gray-600" />}
+        />
 
-        <div>
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Correo electrónico
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="tu@email.com"
-            required
-          />
-        </div>
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@email.com"
+          required
+          autoComplete="email"
+          icon={<HiMail className="w-5 h-5 fill-gray-600" />}
+        />
 
-        <div>
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Contraseña
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="••••••••"
-            required
-          />
-        </div>
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••"
+          required
+          autoComplete="password"
+          icon={<HiLockClosed className="w-5 h-5 fill-gray-600" />}
+        />
 
-        <div>
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Confirmar contraseña
-          </label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            placeholder="••••••••"
-            required
-          />
-        </div>
+        <Input
+          id="confirmPassword"
+          label="Confrim password"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="••••••"
+          required
+          autoComplete="Confrim Password"
+          icon={<HiLockClosed className="w-5 h-5 fill-gray-600" />}
+        />
 
         <div className="flex items-center">
           <input
             id="terms"
             name="terms"
             type="checkbox"
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
             required
           />
           <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
             Acepto los{" "}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a href="#" className="text-emerald-700 hover:underline">
               Términos y Condiciones
             </a>
           </label>
@@ -150,7 +144,7 @@ const SignupForm = () => {
           type="submit"
           loading={loading}
           onClick={() => handleSubmit}
-          className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="w-full py-2 bg-emerald-400 text-white  hover:bg-emerald-700"
         >
           Registrarse
         </Button>
@@ -162,7 +156,7 @@ const SignupForm = () => {
             <div className="w-full border-t border-gray-300"></div>
           </div>
           <div className="relative flex justify-center">
-            <span className="px-2 bg-white text-gray-500 text-sm">
+            <span className="px-2 bg-pink-50 text-gray-500 text-sm">
               O regístrate con
             </span>
           </div>
@@ -178,7 +172,7 @@ const SignupForm = () => {
                 },
               })
             }
-            className="flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 py-2  border border-gray-300 rounded-r-md hover:bg-gray-50"
           >
             <GoogleIcon />
             Google
@@ -193,7 +187,7 @@ const SignupForm = () => {
                 },
               })
             }
-            className="flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 py-2  border border-gray-300 rounded-l-md hover:bg-gray-50"
           >
             <GitHubIcon />
             GitHub
@@ -203,7 +197,7 @@ const SignupForm = () => {
 
       <div className="mt-6 text-center text-sm text-gray-600">
         ¿Ya tienes cuenta?{" "}
-        <a href="/login" className="text-blue-600 hover:underline">
+        <a href="/login" className="text-emerald-700 hover:underline">
           Inicia sesión
         </a>
       </div>

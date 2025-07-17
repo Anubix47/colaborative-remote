@@ -22,7 +22,7 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`flex items-center justify-center transition-colors ${className} ${
+      className={`flex items-center justify-center rounded-2xl transition-colors ${className} ${
         disabled ? "opacity-50 cursor-not-allowed" : ""
       }`}
     >
