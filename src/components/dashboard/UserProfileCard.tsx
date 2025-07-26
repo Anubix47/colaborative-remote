@@ -1,8 +1,8 @@
 import { HiLogout } from "react-icons/hi";
+import type { UserProfile } from "../interfaces/userInterface";
 
 interface UserProfileCardProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  user: any;
+  user: UserProfile;
   onLogout: () => void;
 }
 
