@@ -9,16 +9,14 @@ import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
 import AuthCallback from "./pages/AuthCallback";
+import { LoadingSpinner } from "./components/ui/LoadingSpinner";
+import ChatPage from "./pages/ChatPage";
 
 function App() {
   const { session, loading } = useSession();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -45,6 +43,11 @@ function App() {
           path="/dashboard"
           element={session ? <DashboardPage /> : <Navigate to="/login" />}
         />
+
+        <Route
+          path="/chat"
+          element={session ? <ChatPage /> : <Navigate to="/login" />}
+        ></Route>
 
         <Route path="/auth/callback" element={<AuthCallback />} />
 
