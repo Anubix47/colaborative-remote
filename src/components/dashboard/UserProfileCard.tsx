@@ -27,9 +27,6 @@ const UserProfileCard = ({ user, onLogout }: UserProfileCardProps) => {
         <p className="text-sm font-medium text-gray-900 truncate">
           {user?.full_name || "Usuario"}
         </p>
-        <p className="text-xs text-gray-500 truncate">
-          {user?.email || "usuario@ejemplo.com"}
-        </p>
       </div>
 
       <button

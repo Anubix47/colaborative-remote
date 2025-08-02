@@ -1,5 +1,5 @@
 // src/pages/DashboardPage.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import type { Session } from "@supabase/supabase-js";
@@ -17,41 +17,67 @@ import {
   TaskIcon,
 } from "../components/ui/Icons";
 
+type UserProfile = {
+  id: string;
+  full_name?: string;
+  avatar_url?: string;
+};
+
 const DashboardPage = () => {
   const [session, setSession] = useState<Session | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<
     "projects" | "tasks" | "files" | "chat"
   >("projects");
+  const [searchText, setSearchText] = useState("");
   const navigate = useNavigate();
 
+  // handler de búsqueda (pendiente)
+  const handleSearch = useCallback((query: string) => {
+    setSearchText(query);
+  }, []);
+
+  // Cargar sesión y escuchar cambios de auth
   useEffect(() => {
-    const fetchSession = async () => {
+    let ignore = false;
+
+    const getInitialSessionAndUser = async () => {
       const {
         data: { session },
         error,
       } = await supabase.auth.getSession();
-      if (error) {
-        console.error("Error fetching session:", error);
+      if (error || !session) {
         navigate("/login");
         return;
       }
-
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-
+      if (ignore) return;
       setSession(session);
-      fetchUserData(session.user.id);
+      await fetchUserData(session.user.id);
     };
 
-    fetchSession();
+    getInitialSessionAndUser();
+
+    // Escucha cambios (login/logout/refresh)
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        if (!session) {
+          navigate("/login");
+        } else {
+          setSession(session);
+          await fetchUserData(session.user.id);
+        }
+      }
+    );
+
+    return () => {
+      ignore = true;
+      listener.subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const fetchUserData = async (userId: string) => {
+    setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -60,8 +86,9 @@ const DashboardPage = () => {
 
     if (error) {
       console.error("Error fetching user data:", error);
+      setUserData(null);
     } else {
-      setUserData(data);
+      setUserData(data as UserProfile);
     }
     setLoading(false);
   };
@@ -76,89 +103,74 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
+    <div className="min-h-screen bg-gray-50 flex flex-col md:flex-row">
+      {/* Sidebar mobile: Mostrar arriba y ocultar scrollbar */}
+      {/* En md+ sidebar fija a la izquierda */}
+      <aside className="bg-white border-b border-gray-200 md:border-r md:border-b-0 md:w-64 flex-shrink-0 flex flex-col">
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between md:justify-center">
           <h1 className="text-xl font-bold text-indigo-600">TeamCollab</h1>
+          {/* En mobile puedes agregar aquí un boton para toggle sidebar (opcional) */}
         </div>
 
-        <nav className="flex-1 py-4">
-          <button
-            className={`flex items-center w-full px-6 py-3 text-left ${
-              activeView === "projects"
-                ? "bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-            onClick={() => setActiveView("projects")}
-          >
-            <ProjectIcon />
-            Proyectos
-          </button>
-
-          <button
-            className={`flex items-center w-full px-6 py-3 text-left ${
-              activeView === "tasks"
-                ? "bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-            onClick={() => setActiveView("tasks")}
-          >
-            <TaskIcon />
-            Tareas
-          </button>
-
-          <button
-            className={`flex items-center w-full px-6 py-3 text-left ${
-              activeView === "files"
-                ? "bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-            onClick={() => setActiveView("files")}
-          >
-            <FileIcon />
-            Archivos
-          </button>
-          <button
-            className={`flex items-center w-full px-6 py-3 text-left ${
-              activeView === "chat"
-                ? "bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
-            onClick={() => navigate("/chat")}
-          >
-            <ChatIcon />
-            Chat
-          </button>
+        <nav className="flex md:flex-col overflow-x-auto md:overflow-x-visible">
+          {[
+            { id: "projects", label: "Proyectos", icon: <ProjectIcon /> },
+            { id: "tasks", label: "Tareas", icon: <TaskIcon /> },
+            { id: "files", label: "Archivos", icon: <FileIcon /> },
+            { id: "chat", label: "Chat", icon: <ChatIcon /> },
+          ].map(({ id, label, icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveView(id as typeof activeView)}
+              className={`flex items-center flex-shrink-0 md:flex-shrink md:w-full py-3 px-7 md:py-4 text-left whitespace-nowrap md:whitespace-normal ${
+                activeView === id
+                  ? "bg-indigo-50 text-indigo-600 border-r-4 md:border-r-0 md:border-l-4 md:border-indigo-600"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <span className="mr-2">{icon}</span>{" "}
+              <p className="hidden md:inline">{label}</p>
+            </button>
+          ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 mt-auto">
           <UserProfileCard user={userData} onLogout={handleLogout} />
         </div>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header user={userData} />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <Header user={userData} onSearch={handleSearch} />
 
-        <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <section className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-7xl mx-auto">
             <StatsOverview />
 
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                {activeView === "projects" && <ProjectBoard />}
-                {activeView === "tasks" && <ProjectBoard view="tasks" />}
+                {activeView === "projects" && (
+                  <ProjectBoard search={searchText} />
+                )}
+                {activeView === "tasks" && (
+                  <ProjectBoard view="tasks" search={searchText} />
+                )}
                 {activeView === "files" && <FileExplorer />}
+                {activeView === "chat" && (
+                  <div>
+                    {/* Aquí pon tu componente de chat integrado, si tienes uno */}
+                    <div>Chat integrado (componente pendiente)</div>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-8">
+              <div className="space-y-8 mt-6 lg:mt-0">
                 <ActivityTimeline />
               </div>
             </div>
           </div>
-        </main>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };

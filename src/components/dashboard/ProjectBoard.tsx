@@ -1,79 +1,119 @@
-import { useState } from "react";
-import { HiPlus, HiDotsVertical } from "react-icons/hi";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useState, useEffect } from "react";
+import { HiPlus } from "react-icons/hi";
+import { supabase } from "../../lib/supabaseClient";
+import ProjectCard from "./projectBoard/ProjectCard";
+import TaskCard from "./projectBoard/TaskCard";
+
+export interface Project {
+  id: number;
+  name: string;
+  progress: number;
+  tasks_count: number;
+  updated_at: string;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  profile: string;
+  due_date: string;
+  column: string;
+}
 
 interface ProjectBoardProps {
   view?: "projects" | "tasks";
+  search?: string;
 }
 
-const ProjectBoard = ({ view = "projects" }: ProjectBoardProps) => {
-  const [columns, setColumns] = useState([
-    {
-      id: 1,
-      title: "Por hacer",
-      tasks: [
-        {
-          id: 1,
-          title: "Diseñar nueva interfaz",
-          assignee: "Ana L",
-          dueDate: "2023-06-15",
-        },
-        {
-          id: 2,
-          title: "Revisar documentación API",
-          assignee: "Carlos M",
-          dueDate: "2023-06-18",
-        },
-      ],
-    },
-    {
-      id: 2,
-      title: "En progreso",
-      tasks: [
-        {
-          id: 3,
-          title: "Implementar autenticación",
-          assignee: "Juan P",
-          dueDate: "2023-06-20",
-        },
-        {
-          id: 4,
-          title: "Crear componente dashboard",
-          assignee: "María G",
-          dueDate: "2023-06-22",
-        },
-      ],
-    },
-    {
-      id: 3,
-      title: "Revisión",
-      tasks: [
-        {
-          id: 5,
-          title: "Pruebas de integración",
-          assignee: "Luis R",
-          dueDate: "2023-06-25",
-        },
-      ],
-    },
-    {
-      id: 4,
-      title: "Completado",
-      tasks: [
-        {
-          id: 6,
-          title: "Configurar base de datos",
-          assignee: "Sofía T",
-          dueDate: "2023-06-10",
-        },
-      ],
-    },
-  ]);
+const ProjectBoard = ({ view = "projects", search }: ProjectBoardProps) => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [tasksColumns, setTasksColumns] = useState<
+    { id: number; title: string; tasks: Task[] }[] | any
+  >([]);
+  const [loading, setLoading] = useState(true);
 
-  const [projects] = useState([
-    { id: 1, name: "Rediseño de plataforma", progress: 65, tasks: 12 },
-    { id: 2, name: "Implementación API", progress: 30, tasks: 8 },
-    { id: 3, name: "Documentación técnica", progress: 90, tasks: 15 },
-  ]);
+  // Función para cargar proyectos filtrados por nombre
+  const fetchProjects = async (filter?: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("projects")
+      .select("id, name, progress, tasks_count, updated_at")
+      .ilike("name", `%${filter}%`)
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching projects:", error);
+      setProjects([]);
+    } else {
+      setProjects(data || []);
+    }
+    setLoading(false);
+  };
+
+  // Función para cargar tareas de las columnas, filtrando por título si aplica
+  const fetchTasks = async (filter?: string) => {
+    setLoading(true);
+    // Ojo: Este ejemplo asume que tienes una tabla tasks con columna 'column' que indica status
+    const columns = [
+      { id: 1, title: "Por hacer" },
+      { id: 2, title: "En progreso" },
+      { id: 3, title: "Revisión" },
+      { id: 4, title: "Completado" },
+    ];
+
+    // Para cada columna, consultar tareas filtradas
+    const tasksByColumn = await Promise.all(
+      columns.map(async (col) => {
+        const { data, error } = await supabase
+          .from("tasks")
+          .select(
+            `
+    id,
+    title,
+    due_date,
+    column,
+    project_id,
+    profile:assignee (
+      full_name
+    )
+  `
+          )
+          .eq("column", col.title)
+          .ilike("title", `%${filter}%`)
+          .order("due_date", { ascending: true });
+
+        console.log(data);
+
+        if (error) {
+          console.error(`Error fetching tasks for column ${col.title}:`, error);
+          return { ...col, tasks: [] };
+        }
+
+        const tasksNormalized = (data || []).map((task) => ({
+          ...task,
+          due_date: new Date(task.due_date).toLocaleDateString(),
+        }));
+        return { ...col, tasks: tasksNormalized };
+      })
+    );
+
+    setTasksColumns(tasksByColumn);
+    setLoading(false);
+  };
+
+  // Efecto para cargar datos según el view y el filtro search
+  useEffect(() => {
+    if (view === "projects") {
+      fetchProjects(search);
+    } else {
+      fetchTasks(search);
+    }
+  }, [view, search]);
+
+  if (loading) {
+    return <p>Cargando...</p>;
+  }
 
   return (
     <div className="bg-white shadow rounded-lg p-6">
@@ -89,75 +129,41 @@ const ProjectBoard = ({ view = "projects" }: ProjectBoardProps) => {
 
       {view === "projects" ? (
         <div className="space-y-4">
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
-              <div className="flex justify-between items-start">
-                <h3 className="font-medium text-gray-900">{project.name}</h3>
-                <button className="text-gray-400 hover:text-gray-600">
-                  <HiDotsVertical className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex justify-between text-sm text-gray-500 mb-1">
-                  <span>Progreso</span>
-                  <span>{project.progress}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-indigo-600 h-2 rounded-full"
-                    style={{ width: `${project.progress}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-between text-sm text-gray-500">
-                <span>{project.tasks} tareas</span>
-                <span>Última actualización: Hoy</span>
-              </div>
-            </div>
-          ))}
+          {projects.length === 0 ? (
+            <p className="text-gray-500">No se encontraron proyectos.</p>
+          ) : (
+            projects.map((project) => <ProjectCard project={project} />)
+          )}
         </div>
       ) : (
         <div className="flex overflow-x-auto pb-4 space-x-4">
-          {columns.map((column) => (
-            <div
-              key={column.id}
-              className="min-w-[300px] bg-gray-50 rounded-lg p-4"
-            >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-gray-900">{column.title}</h3>
-                <span className="bg-gray-200 rounded-full px-2 py-1 text-xs font-medium">
-                  {column.tasks.length}
-                </span>
-              </div>
+          {tasksColumns.length === 0 ? (
+            <p>No se encontraron tareas.</p>
+          ) : (
+            tasksColumns.map((column: any) => (
+              <div
+                key={column.id}
+                className="min-w-[300px] bg-gray-50 rounded-lg p-4"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-medium text-gray-900">{column.title}</h3>
+                  <span className="bg-gray-200 rounded-full px-2 py-1 text-xs font-medium">
+                    {column.tasks.length}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {column.tasks.map((task: any) => (
+                    <TaskCard task={task} />
+                  ))}
 
-              <div className="space-y-3">
-                {column.tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-                  >
-                    <h4 className="font-medium text-gray-900">{task.title}</h4>
-                    <div className="mt-3 flex justify-between items-center text-sm">
-                      <span className="bg-indigo-100 text-indigo-800 px-2 py-1 rounded">
-                        {task.assignee}
-                      </span>
-                      <span className="text-gray-500">{task.dueDate}</span>
-                    </div>
-                  </div>
-                ))}
-
-                <button className="w-full flex items-center justify-center text-gray-500 hover:text-indigo-600 p-2 rounded-lg border border-dashed border-gray-300 hover:border-indigo-300">
-                  <HiPlus className="mr-1" />
-                  Añadir tarea
-                </button>
+                  <button className="w-full flex items-center justify-center text-gray-500 hover:text-indigo-600 p-2 rounded-lg border border-dashed border-gray-300 hover:border-indigo-300">
+                    <HiPlus className="mr-1" />
+                    Añadir tarea
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

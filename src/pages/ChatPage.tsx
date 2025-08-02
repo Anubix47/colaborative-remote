@@ -4,9 +4,10 @@ import { supabase } from "../lib/supabaseClient";
 import Header from "../components/dashboard/Header";
 import UserProfileCard from "../components/dashboard/UserProfileCard";
 import ChatContainer from "../components/chat/ChatContainer";
+import type { Session } from "@supabase/supabase-js";
 
 const ChatPage = () => {
-  const [session, setSession] = useState(null);
+  const [session, setSession] = useState<Session | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userData, setUserData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
