@@ -1,14 +1,14 @@
-// src/components/auth/SignUpForm.tsx
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// src/components/auth/SignInForm.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signUp } from "../../hooks/useSupabase";
+import { signIn } from "../../hooks/useSupabase";
 
-export const SignUpForm = () => {
+export const SignInForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -16,13 +16,12 @@ export const SignUpForm = () => {
     setLoading(true);
     setError("");
 
-    const error = await signUp(email, password);
+    const { error, data } = await signIn(email, password);
 
     if (error) {
       setError(error.message);
     } else {
-      setMessage("Revisa tu correo para confirmar la cuenta.");
-      navigate("/signin");
+      navigate("/dashboard");
     }
     setLoading(false);
   };
@@ -30,18 +29,12 @@ export const SignUpForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <h2 className="text-xl font-semibold text-gray-700 text-center">
-        Crear cuenta
+        Iniciar sesión
       </h2>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded-lg">
+        <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md border border-red-200">
           {error}
-        </div>
-      )}
-
-      {message && (
-        <div className="bg-green-50 border border-green-200 text-green-600 text-sm p-3 rounded-lg">
-          {message}
         </div>
       )}
 
@@ -51,7 +44,7 @@ export const SignUpForm = () => {
           htmlFor="email"
           className="block text-sm font-medium text-gray-600"
         >
-          Correo electrónico
+          Correo
         </label>
         <input
           id="email"
@@ -59,7 +52,7 @@ export const SignUpForm = () => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
           placeholder="tu@correo.com"
         />
       </div>
@@ -78,31 +71,34 @@ export const SignUpForm = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={6}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
           placeholder="••••••••"
         />
-        <p className="text-xs text-gray-500">Mínimo 6 caracteres</p>
       </div>
 
-      {/* Botón de registro */}
+      {/* Botón de acceso */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-green-600 text-white py-3 rounded-lg font-medium text-base active:scale-98 hover:bg-green-700 disabled:opacity-70 transition-transform"
+        className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium text-base hover:bg-blue-700 disabled:opacity-70 disabled:cursor-not-allowed active:scale-98 transition-transform"
       >
-        {loading ? "Creando cuenta..." : "Registrarse"}
+        {loading ? "Cargando..." : "Ingresar"}
       </button>
 
-      {/* Enlace a login */}
-      <div className="text-center pt-2 border-t border-gray-100">
-        <p className="text-sm text-gray-600">
-          ¿Ya tienes cuenta?{" "}
+      {/* Enlaces secundarios */}
+      <div className="text-center space-y-3 text-sm pt-2 border-t border-gray-100">
+        <p>
+          ¿No tienes cuenta?{" "}
           <a
-            href="/signin"
-            className="text-blue-600 font-medium hover:underline"
+            href="/signup"
+            className="text-blue-600 text-sm hover:underline font-medium"
           >
-            Inicia sesión
+            Regístrate
+          </a>
+        </p>
+        <p>
+          <a href="/reset" className="text-gray-500 text-sm hover:underline">
+            ¿Olvidaste tu contraseña?
           </a>
         </p>
       </div>

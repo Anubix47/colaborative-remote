@@ -4,56 +4,62 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { useSession } from "./hooks/useSession";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import DashboardPage from "./pages/DashboardPage";
-import AuthCallback from "./pages/AuthCallback";
-import { LoadingSpinner } from "./components/ui/LoadingSpinner";
-import ChatPage from "./pages/ChatPage";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { SignInForm } from "./components/auth/SignInForm";
+import { SignUpForm } from "./components/auth/SignUpForm";
+import { ResetPasswordForm } from "./components/auth/ResetPasswordForm";
+import { AuthLayout } from "./components/auth/AuthLayout";
+import type { JSX } from "react";
+import Dashboard from "./pages/Dashboard";
+
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { session, loading } = useAuth();
+  if (loading) return <div>Cargando...</div>;
+  if (!session) return <Navigate to="/signin" />;
+  return children;
+};
 
 function App() {
-  const { session, loading } = useSession();
-
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            session ? <Navigate to="/dashboard" /> : <Navigate to="/login" />
-          }
-        />
-
-        <Route
-          path="/login"
-          element={session ? <Navigate to="/dashboard" /> : <LoginPage />}
-        />
-
-        <Route
-          path="/signup"
-          element={session ? <Navigate to={"/dashboard"} /> : <SignupPage />}
-        ></Route>
-
-        <Route
-          path="/dashboard"
-          element={session ? <DashboardPage /> : <Navigate to="/login" />}
-        />
-
-        <Route
-          path="/chat"
-          element={session ? <ChatPage /> : <Navigate to="/login" />}
-        ></Route>
-
-        <Route path="/auth/callback" element={<AuthCallback />} />
-
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/signin"
+            element={
+              <AuthLayout>
+                <SignInForm />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <AuthLayout>
+                <SignUpForm />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/reset"
+            element={
+              <AuthLayout>
+                <ResetPasswordForm />
+              </AuthLayout>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
