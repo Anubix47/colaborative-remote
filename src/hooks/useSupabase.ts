@@ -22,12 +22,31 @@ const signUp = async (email: string, password: string) => {
   return error;
 };
 
+//Iniciar sesion con Google y GitHub
+const signUpWithOAuth = (provider: "google" | "github") => {
+  supabase.auth
+    .signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin + "/dashboard",
+      },
+    })
+    .catch((error) => {
+      return `Error con ${provider} : ${error.message}`;
+    });
+};
+
 const resetPassword = async (email: string) => {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset`,
+    redirectTo: `${window.location.origin}/reset/password`,
   });
 
   return error;
 };
 
-export { resetPassword, signIn, signUp };
+//Cerrar sesion
+const signOut = async () => {
+  await supabase.auth.signOut();
+};
+
+export { resetPassword, signIn, signUp, signUpWithOAuth, signOut };

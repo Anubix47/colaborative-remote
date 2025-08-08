@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
 /* eslint-disable react-refresh/only-export-components */
 // src/contexts/AuthContext.tsx
 import {
@@ -9,6 +10,7 @@ import {
 } from "react";
 import { supabase } from "../lib/supabase";
 import type { Session } from "@supabase/supabase-js";
+import { signOut } from "../hooks/useSupabase";
 
 interface AuthContextType {
   session: Session | null;
@@ -47,10 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       listener?.subscription.unsubscribe();
     };
   }, []);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   return (
     <AuthContext.Provider value={{ session, loading, signOut }}>

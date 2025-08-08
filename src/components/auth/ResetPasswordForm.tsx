@@ -22,6 +22,7 @@ export const ResetPasswordForm = () => {
     } else {
       setMessage("Revisa tu correo para restablecer la contraseña.");
     }
+
     setLoading(false);
   };
 

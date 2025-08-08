@@ -11,6 +11,7 @@ import { ResetPasswordForm } from "./components/auth/ResetPasswordForm";
 import { AuthLayout } from "./components/auth/AuthLayout";
 import type { JSX } from "react";
 import Dashboard from "./pages/Dashboard";
+import Board from "./pages/Board";
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { session, loading } = useAuth();
@@ -49,6 +50,14 @@ function App() {
             }
           />
           <Route
+            path="/reset/password"
+            element={
+              <AuthLayout>
+                <ResetPasswordForm />
+              </AuthLayout>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
@@ -56,7 +65,17 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/board/:id"
+            element={
+              <ProtectedRoute>
+                <Board />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/" element={<Navigate to="/dashboard" />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>
     </AuthProvider>
